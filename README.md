@@ -62,3 +62,5 @@ crash[4863:487533] *** -[__NSArrayM addObject:]: message sent to deallocated ins
 
 本文讨论的问题是在在非arc情况下。
 现在定位到的crash位置是内存已经被释放后再次被访问的位置，如果array对象是个类的成员对象被释放后还有别的地方使用，找到这个位置并不能说就找到了问题所在，那就可以借助malloc stack来定位更详细的信息。
+
+ipa包 重签名：http://www.cocoachina.com/bbs/3g/read.php?tid=181236
