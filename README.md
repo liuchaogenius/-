@@ -70,3 +70,5 @@ http://blog.ibireme.com/2015/11/12/smooth_user_interfaces_for_ios/
 
 手机尺寸
 http://iosres.com/
+
+http://c.biancheng.net/cpp/html/138.html
