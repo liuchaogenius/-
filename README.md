@@ -84,6 +84,75 @@ http://endust.github.io/2016/03/12/iOS%E8%A7%86%E9%A2%91%E5%BD%95%E5%88%B6%E5%8E
 
 http://www.jianshu.com/p/4acdf1d25319
 
+
+线程无关方法
+
+1
+2
+3
+- (id)performSelector:(SEL)aSelector;  
+- (id)performSelector:(SEL)aSelector withObject:(id)object;  
+- (id)performSelector:(SEL)aSelector withObject:(id)object1 withObject:(id)object2;
+这三个方法，均为同步执行，与线程无关，主线程和子线程中均可调用。等同于直接调用该方法。在需要动态的去调用方法的时候去使用。
+例如：[self performSelector:@selector(test2)];与[self test2];执行效果上完全相同。
+
+Delayed perform
+
+1
+2
+- (void)performSelector:(SEL)aSelector withObject:(id)anArgument afterDelay:(NSTimeInterval)delay inModes:(NSArray *)modes;
+- (void)performSelector:(SEL)aSelector withObject:(id)anArgument afterDelay:(NSTimeInterval)delay;
+1、这两个方法为异步执行
+2、这两个方法只能在主线程中执行，其它线程不执行
+3、即使delay传参为0，也不会立即执行，而是在next runloop执行
+4、可用于当点击UI中一个按钮会触发一个消耗系统性能的事件，在事件执行期间按钮会一直处于高亮状态，此时可以调用该方法去异步的处理该事件，就能避免上面的问题。
+
+在方法未到执行时间之前，取消方法为
+
+1
+2
++ (void)cancelPreviousPerformRequestsWithTarget:(id)aTarget selector:(SEL)aSelector object:(id)anArgument;
++ (void)cancelPreviousPerformRequestsWithTarget:(id)aTarget;
+on mainthread
+
+1
+2
+- (void)performSelectorOnMainThread:(SEL)aSelector withObject:(id)arg waitUntilDone:(BOOL)wait modes:(NSArray *)array;
+- (void)performSelectorOnMainThread:(SEL)aSelector withObject:(id)arg waitUntilDone:(BOOL)wait;
+1、这两个方法，在主线程和子线程中均可执行，均会在主线程中调aSelector方法
+2、如果设置wait为NO:等待当前线程执行完以后，主线程才会执行aSelector方法；
+3、设置为YES：不等待当前线程执行完，就在主线程上执行aSelector方法。
+4、第二个方法使用默认的模式（NSDefaultRunLoopMode）。
+
+
+- (id)performSelector:(SEL)aSelector withParameters:(void *)firstParameter, ... {
+    NSMethodSignature *signature = [self methodSignatureForSelector:aSelector];
+    NSUInteger length = [signature numberOfArguments];
+    NSInvocation *invocation = [NSInvocation invocationWithMethodSignature:signature];
+    [invocation setTarget:self];
+    [invocation setSelector:aSelector];
+    
+    [invocation setArgument:&firstParameter atIndex:2];
+    va_list arg_ptr;
+    va_start(arg_ptr, firstParameter);
+    for (NSUInteger i = 3; i < length; ++i) {
+        void *parameter = va_arg(arg_ptr, void *);
+        [invocation setArgument:&parameter atIndex:i];
+    }
+    va_end(arg_ptr);
+    
+    [invocation invoke];
+    
+    if ([signature methodReturnLength]) {
+        id data;
+        [invocation getReturnValue:&data];
+        return data;
+    }
+    return nil;
+}
+@end
+
+2222
 iOS平台基于ffmpeg的视频直播技术揭秘：：https://segmentfault.com/a/1190000005001879
 
 现在非常流行直播,相信很多人都跟我一样十分好奇这个技术是如何实现的,正好最近在做一个ffmpeg的项目,发现这个工具很容易就可以做直播,下面来给大家分享下技术要点:
